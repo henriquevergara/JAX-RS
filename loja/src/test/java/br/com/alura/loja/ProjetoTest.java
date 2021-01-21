@@ -12,34 +12,44 @@ import org.junit.Test;
 import com.thoughtworks.xstream.XStream;
 
 import br.com.alura.loja.modelo.Projeto;
-import br.com.alura.loja.servidor.Servidor;
 import junit.framework.Assert;
 
 public class ProjetoTest {
-
 	private HttpServer server;
 
 	@Before
-	public void before() {
-
-		server = Servidor.inicializaServidor();
-
+	public void startaServidor() {
+		this.server = Servidor.inicializaServidor();
 	}
 
 	@After
-	public void after() {
+	public void mataServidor() {
 		server.stop();
 	}
 	
 	@Test
-	public void testaRetornoDoServidorParaProjetos() {
-		
-		Client client = ClientBuilder.newClient();
-		WebTarget target = client.target("http://localhost:8080");
-		String conteudo = target.path("/projetos").request().get(String.class);
-		System.out.println(conteudo);
-		Projeto projeto = (Projeto) new XStream().fromXML(conteudo);
-		Assert.assertEquals(2014, projeto.getAnoDeInicio());
-	}
+    public void testaQueAConexaoComOServidorFuncionaNoPathDeProjetos() {
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target("http://localhost:8080");
+        String conteudo = target.path("/projetos").request().get(String.class);
+        Assert.assertTrue(conteudo.contains("<nome>Minha loja"));
+    }
 	
+    @Test
+    public void testaQueBuscarUmProjetoTrazOProjetoEsperado() {
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target("http://localhost:8080");
+        String conteudo = target.path("/projetos").request().get(String.class);
+        Projeto projeto = (Projeto) new XStream().fromXML(conteudo);
+        Assert.assertEquals("Minha loja", projeto.getNome());
+    }
+    
+    @Test
+    public void testaQueBuscarUmProjetoTrasUmProjeto() {
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target("http://localhost:8080");
+        String conteudo = target.path("/projetos/1").request().get(String.class);
+        Projeto projeto = (Projeto) new XStream().fromXML(conteudo);
+        Assert.assertEquals("Minha loja", projeto.getNome());
+    }
 }
